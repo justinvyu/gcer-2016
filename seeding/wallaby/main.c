@@ -22,9 +22,10 @@ int main()
     float kp = 2.4, // proportionality constant
           ki = 0.1,  // integral constant
           kd = 8.2; // derivative constant
+    int tp = 1000; // speed of motors at error = 0
+          
     int low, high;
     float offset = 0; // average of white and black sensor values (660, 985) = 822.5
-    int tp = 1000; // speed of motors at error = 0
     float integral = 0; // running total of errors
     float last_error = 0;
     float derivative = 0; // current error - last error
