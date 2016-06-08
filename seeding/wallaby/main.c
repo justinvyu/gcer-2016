@@ -19,7 +19,7 @@ int main()
 
     // PID
 
-    float kp = 2.4, // proportionality constant
+    float kp = 2.4, // proportional constant
           ki = 0.1,  // integral constant
           kd = 8.2; // derivative constant
     int tp = 1000; // speed of motors at error = 0
