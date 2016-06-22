@@ -36,12 +36,12 @@ static void shake_arm() {
     }}
 
 static void lower_arm() {
-    scorpion.controller.slow_servo(ARM_SERVO, ARM_DOWN, 0.8);
+    scorpion.controller.slow_servo(ARM_SERVO, ARM_DOWN, 0.4);
 }
 
 static void raise_arm() {
-    scorpion.controller.servo(ARM_SERVO, ARM_UP);
-    msleep(700);
+    scorpion.controller.slow_servo(ARM_SERVO, ARM_UP + 400, 0.6);
+    scorpion.controller.slow_servo(ARM_SERVO, ARM_UP, 0.2);
     // scorpion.controller.slow_servo(ARM_SERVO, ARM_UP, SERVO_DURATION);
 }
 
@@ -51,12 +51,16 @@ static void raise_arm_slow(float time) {
 
 static void open_claw() {
     scorpion.controller.servo(CLAW_SERVO, CLAW_OPEN);
-    msleep(200);
+    msleep(150);
+}
+
+static void open_claw_slow(float time) {
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN, time);
 }
 
 static void close_claw() {
     scorpion.controller.servo(CLAW_SERVO, CLAW_CLOSED);
-    msleep(200);
+    msleep(150);
 }
 
 static void close_claw_slow(float time) {
@@ -65,12 +69,12 @@ static void close_claw_slow(float time) {
 
 static void set_claw_to_position(int position) {
     scorpion.controller.servo(CLAW_SERVO, position);
-    msleep(250);
+    msleep(150);
 }
 
 static void set_arm_to_position(int position) {
     scorpion.controller.servo(ARM_SERVO, position);
-    msleep(250);
+    msleep(150);
 }
 
 static void lift_basket() {
@@ -91,6 +95,10 @@ static void drop_basket_slow() {
     scorpion.controller.slow_servo(BACK_SERVO, BACK_DOWN, SERVO_DURATION);
 }
 
+void _open_claw_slow() {
+    scorpion.open_claw_slow(0.6);
+}
+
 void _close_claw_slow() {
     scorpion.close_claw_slow(1.3);
 }
@@ -99,26 +107,43 @@ void _raise_arm_slow() {
     scorpion.close_claw_slow(1.0);
 }
 
+static void lower_arm__open_claw() { // async call
+    thread tid = thread_create(_open_claw_slow);
+    thread_start(tid);
+    scorpion.lower_arm();
+    thread_wait(tid);
+    thread_destroy(tid);
+}
+
 static void grab_tribbles() {
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.6);
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.2);
     scorpion.grab_tribbles_async();
 }
 
 static void grab_tribbles_async() {
     thread tid = thread_create(_close_claw_slow);
     thread_start(tid);
-    scorpion.create.forward(12, 100);
+    scorpion.create.forward(12, 250);
     thread_wait(tid);
     thread_destroy(tid);
     scorpion.set_claw_to_position(CLAW_PARTIAL);
     scorpion.close_claw_slow(0.6);
 }
 
+void _claw_partial() {
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.3);
+}
+
 static void grab_tribbles_slow() {
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.4);
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.3);
     scorpion.set_claw_to_position(CLAW_OPEN - 300);
-    scorpion.create.forward(8, 100);
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.4);
+
+    thread tid = thread_create(_claw_partial);
+    thread_start(tid);
+    scorpion.create.forward(14, 250);
+    thread_wait(tid);
+    thread_destroy(tid);
+
     scorpion.grab_tribbles_async();
 }
 
@@ -213,38 +238,60 @@ static void determine_action(int *red, int *green) {
 }
 
 static void isolate_tribbles() {
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.4);
-    scorpion.create.forward(8, 150);
-    scorpion.close_claw();
+    scorpion.create.forward(26, 180);
+    scorpion.close_claw_slow(0.5);
 
     int i;
-    for(i = 0; i < 6; i++) {
+    for(i = 0; i < 15; i++) {
         scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.2);
         scorpion.close_claw();
     }
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.4);
+    scorpion.create.backward(4, 200);
+    for(i = 0; i < 3; i++) {
+        scorpion.close_claw();
+        msleep(50);
+        scorpion.set_claw_to_position(CLAW_PARTIAL);
+    }
+    scorpion.close_claw();
+  /*
+    for(i = 0; i < 2; i++) {
+        scorpion.close_claw();
+        scorpion.set_arm_to_position(ARM_DOWN - 300);
 
-    scorpion.set_claw_to_position(400);
-    scorpion.create.backward(6, 150);
-    scorpion.create.forward(6, 150);
-    scorpion.close_claw();
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.2);
-    scorpion.create.backward(5, 120);
-    scorpion.close_claw();
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.2);
-    scorpion.close_claw();
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.2);
-    scorpion.create.backward(7, 120);
-    scorpion.close_claw();
-    scorpion.create.forward(4, 120);
-    scorpion.create.backward(4, 120);
+        thread tid = thread_create(lower_arm);
+        thread_start(tid);
+        scorpion.set_claw_to_position(500);
+        thread_wait(tid);
+        thread_destroy(tid);
+
+        msleep(500);
+    }
+  */
 }
 
 static int get_tophat_value() {
     return analog10(scorpion.tophat_port);
 }
 
+static int get_touch_value() {
+    return digital(scorpion.touch_port);
+}
+
 static int is_tophat_on_line() {
     return get_tophat_value() > 680 ? 1 : 0;
+}
+
+static void forward_until_touch(int speed) {
+    scorpion.create.drive_direct(speed, speed);
+    while(get_touch_value() == 0);
+    scorpion.create.stop();
+}
+
+static void forward_until_black(int speed) {
+    scorpion.create.drive_direct(speed, speed);
+    while(is_tophat_on_line() == 0);
+    scorpion.create.stop();
 }
 
 static void left_until_black(int speed) {
@@ -271,11 +318,159 @@ static void right_until_white(int speed) {
     scorpion.create.stop();
 }
 
-Scorpion new_scorpion(int tophat) {
+// precondition: just got 5th tribble pile with up, claw open
+static void move_botguy() {
+    scorpion.set_arm_to_position(1500);
+
+    scorpion.close_claw();
+    scorpion.create.forward(32, 300);
+
+    scorpion.create.left(22, 0, 300);
+    scorpion.lower_arm();
+    scorpion.create.right(12, 0, 420);
+    scorpion.set_claw_to_position(CLAW_PARTIAL);
+
+    scorpion.right_until_black(100);
+}
+
+static void line_follow(int create_distance) {
+
+    scorpion.create.set_distance(0);
+    float kp = 1.6, // proportional constant
+          ki = 0.1,  // integral constant
+          kd = 4.2; // derivative constant
+
+    int speed = 200; // speed of motors at error = 0
+    float offset = 823.;
+
+    float integral = 0; // running total of errors
+    float last_error = 0;
+    float derivative = 0; // current error - last error
+
+    int sensor_value, turn;
+    float error;
+
+    while(scorpion.create.get_distance() < create_distance) {
+        sensor_value = scorpion.get_tophat_value();
+
+        error = sensor_value - offset;
+        integral = (7. / 8.) * integral + error;
+        derivative = error - last_error;
+
+        turn = (int)(kp * error + ki * integral + kd * derivative);
+		turn /= 15;
+
+        scorpion.create.drive_direct(speed + turn, speed - turn);
+
+        last_error = error;
+
+        msleep(50);
+    }
+    scorpion.create.stop();
+}
+
+static void line_follow_backward(int create_distance) {
+    scorpion.create.set_distance(0);
+    float kp = 1.6, // proportional constant
+          ki = 0.1,  // integral constant
+          kd = 4.2; // derivative constant
+
+    int speed = -200; // speed of motors at error = 0
+    float offset = 823.;
+
+    float integral = 0; // running total of errors
+    float last_error = 0;
+    float derivative = 0; // current error - last error
+
+    int sensor_value, turn;
+    float error;
+
+    while(scorpion.create.get_distance() > create_distance) {
+        sensor_value = scorpion.get_tophat_value();
+
+        error = sensor_value - offset;
+        integral = (7. / 8.) * integral + error;
+        derivative = error - last_error;
+
+        turn = (int)(kp * error + ki * integral + kd * derivative);
+		turn /= 15;
+
+        scorpion.create.drive_direct(speed + turn, speed - turn);
+
+        last_error = error;
+
+        msleep(50);
+    }
+    scorpion.create.stop();
+}
+
+void score_bin() {
+    scorpion.create.left(160, 0, 250);
+    scorpion.left_until_black(100);
+    scorpion.create.backward(35, 300);
+    scorpion.set_arm_to_position(ARM_PARTIAL);
+    scorpion.drop_basket_slow();
+}
+
+void score(enum Case tribble_pile) {
+    switch(tribble_pile) {
+    case PILE_ONE:
+        scorpion.create.backward(20, 400);
+        scorpion.lower_arm__open_claw();
+        scorpion.create.forward(22, 300);
+        scorpion.isolate_tribbles();
+        scorpion.set_arm_to_position(ARM_PARTIAL + 400);
+
+        scorpion.line_follow(1300);
+        scorpion.raise_arm();
+        scorpion.set_claw_to_position(CLAW_PARTIAL);
+        score_bin();
+        break;
+    case PILE_TWO:
+        scorpion.create.backward(10, 280);
+        scorpion.lower_arm__open_claw();
+        scorpion.isolate_tribbles();
+        scorpion.raise_arm_slow(0.8);
+        scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.4);
+        scorpion.create.left(85, 0, 300);
+        scorpion.create.backward(40, 300);
+        scorpion.create.backward(20, 250);
+
+        scorpion.create.forward(8, 300);
+        scorpion.create.left(83, 0, 300);
+        scorpion.create.backward(105, 300);
+
+        scorpion.set_arm_to_position(ARM_PARTIAL);
+        scorpion.drop_basket_slow();
+        break;
+    case PILE_THREE:
+        scorpion.lower_arm__open_claw();
+        scorpion.set_claw_to_position(CLAW_OPEN - 200);
+        scorpion.isolate_tribbles();
+        scorpion.raise_arm_slow(0.8);
+        scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.4);
+
+        scorpion.create.left(85, 0, 300);
+        scorpion.create.backward(30, 300);
+        scorpion.create.backward(20, 250);
+
+        scorpion.create.forward(8, 300);
+        scorpion.create.left(80, 0, 300);
+        scorpion.create.backward(83, 300);
+
+        scorpion.set_arm_to_position(ARM_PARTIAL);
+        scorpion.drop_basket_slow();
+        break;
+    }
+}
+
+Scorpion new_scorpion(int tophat, int touch) {
 	Scorpion instance = {
         // Assign instance properties
         .tophat_port = tophat,
         .get_tophat_value = &get_tophat_value,
+        .touch_port = touch,
+        .get_touch_value = &get_touch_value,
         .grab_tribbles = &grab_tribbles,
         .grab_tribbles_slow = &grab_tribbles_slow,
         .grab_tribbles_async = &grab_tribbles_async,
@@ -288,6 +483,7 @@ Scorpion new_scorpion(int tophat) {
         .open_claw = &open_claw,
         .close_claw = &close_claw,
         .close_claw_slow = &close_claw_slow,
+        .open_claw_slow = &open_claw_slow,
         .set_claw_to_position = &set_claw_to_position,
         .set_arm_to_position = &set_arm_to_position,
         .lift_basket = &lift_basket,
@@ -301,7 +497,14 @@ Scorpion new_scorpion(int tophat) {
         .left_until_black = &left_until_black,
         .right_until_black = &right_until_black,
         .right_until_white = &right_until_white,
-        .left_until_white = &left_until_white
+        .left_until_white = &left_until_white,
+        .forward_until_black = &forward_until_black,
+        .lower_arm__open_claw = &lower_arm__open_claw,
+        .move_botguy = &move_botguy,
+        .score = &score,
+        .forward_until_touch = &forward_until_touch,
+        .line_follow = &line_follow,
+        .line_follow_backward = &line_follow_backward
     };
     instance.create = new_create();
     instance.controller = new_create_controller();
