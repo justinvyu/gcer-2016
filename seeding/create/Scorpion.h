@@ -13,14 +13,13 @@ enum ServoPositions {
     CLAW_SERVO = 1,
     BACK_SERVO = 2,
 
-    ARM_UP = 100,
+    ARM_UP = 50,
     ARM_PARTIAL = 1000,
     ARM_DOWN = 2020,
 
     CLAW_OPEN = 1050,
     CLAW_PARTIAL = 800,
     CLAW_CLOSED = 0,
-    CLAW_COMPLETE = 2047,
 
     BACK_UP = 600,
     BACK_DOWN = 2000

@@ -38,7 +38,7 @@ void wait_till(float t)
 void third_tribble_pile_thread() {
     scorpion.raise_arm();
     msleep(200);
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.3);
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.5);
 }
 
 // ----------- SEEDING -----------
@@ -68,7 +68,8 @@ void seeding() {
 
     // scorpion.open_claw();
     // scorpion.lower_arm();
-    scorpion.lower_arm__open_claw();
+    scorpion.lower_arm();
+    scorpion.set_claw_to_position(CLAW_PARTIAL + 100);
 
     // Get the first tribble pile
 
@@ -78,7 +79,7 @@ void seeding() {
     scorpion.create.forward(21, 300);
 
     scorpion.create.right(90, 0, 300);
-    scorpion.create.backward(18, 250);
+    scorpion.create.backward(15, 220);
     scorpion.create.forward(5, 280);
     scorpion.create.right(50, 0, 300);
     scorpion.right_until_black(100);
@@ -96,14 +97,16 @@ void seeding() {
     msleep(100);
     scorpion.create.backward(20, 180);
 
-    scorpion.create.right(17, 0, 180);
+    scorpion.create.right(18, 0, 180);
     scorpion.create.left(6, 0, 180);
     scorpion.create.forward(15, 200);
-    scorpion.create.backward(16, 200);
+    scorpion.create.backward(17, 180);
+    scorpion.create.forward(5, 150);
+    scorpion.create.backward(5, 150);
 
     scorpion.lift_basket_slow();
 
-    scorpion.create.backward(25, 280);
+    scorpion.create.backward(25, 200);
 
     now();
 
@@ -113,24 +116,27 @@ void seeding() {
     scorpion.create.left(45, 0, 300);
 
     scorpion.raise_arm_slow(0.6);
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN - 200, 0.3);
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN - 200, 0.5);
     // scorpion.set_arm_to_position(ARM_DOWN - 200);
 
     scorpion.lower_arm__open_claw();
     // scorpion.create.forward(22, 250);
     scorpion.grab_tribbles();
-    scorpion.create.right(55, 28, 300);
+
+    scorpion.create.right(57, 27, 300);
+
     scorpion.raise_arm();
     msleep(200);
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN - 200, 0.3);
+
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN - 200, 0.5);
 
     now();
 
     // Get third tribble pile
 
     scorpion.set_claw_to_position(CLAW_OPEN - 200);
-    scorpion.set_arm_to_position(ARM_DOWN - 100);
-    scorpion.create.forward_with_speed(19, 300, 280);
+    scorpion.set_arm_to_position(ARM_DOWN - 110);
+    scorpion.create.forward_with_speed(22, 300, 278);
     scorpion.set_arm_to_position(ARM_DOWN);
     scorpion.grab_tribbles();
 
@@ -174,7 +180,7 @@ void seeding() {
     scorpion.create.forward(14, 300);
 
     scorpion.raise_arm_slow(0.6);
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN - 200, 0.3);
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN - 200, 0.5);
 
     now();
 
@@ -183,7 +189,7 @@ void seeding() {
     scorpion.create.right(88, 0, 280);
     scorpion.create.backward(20, 250);
 
-    scorpion.set_arm_to_position(1700); // not parallel to tribbles
+    scorpion.set_arm_to_position(1750); // not parallel to tribbles
     scorpion.set_claw_to_position(CLAW_PARTIAL - 180);
 
     now();
@@ -208,7 +214,7 @@ void seeding() {
     scorpion.lower_arm__open_claw();
     scorpion.grab_tribbles();
     scorpion.raise_arm();
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN, 0.3);
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN, 0.5);
 
     now();
 
@@ -225,15 +231,19 @@ void seeding() {
     scorpion.grab_tribbles();
     scorpion.raise_arm();
     msleep(300);
-    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN, 0.3);
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_OPEN, 0.5);
     now();
 
     // square on other side
 
     scorpion.create.forward(30, 300);
-    scorpion.create.right(140, 0, 300);
-    scorpion.right_until_black(50);
-    scorpion.right_until_white(50);
+    scorpion.create.right(83, 0, 300);
+    scorpion.create.backward(15, 300);
+    scorpion.create.backward(10, 250);
+    scorpion.create.forward(10, 300);
+    scorpion.create.right(60, 0, 300);
+    scorpion.right_until_black(100);
+    scorpion.right_until_white(100);
 
     tid = thread_create(scorpion.close_claw);
     thread_start(tid);
@@ -247,7 +257,7 @@ void seeding() {
     // check for case #1
 
     scorpion.create.forward(6, 300);
-    scorpion.create.right(85, 0, 300);
+    scorpion.create.right(83, 0, 300);
     scorpion.create.backward(25, 250);
     scorpion.create.forward(28, 300);
     //scorpion.create.left(80, 45, 300);
@@ -264,18 +274,21 @@ void seeding() {
     // check for case #2
 
     scorpion.create.forward(40, 300);
-    scorpion.create.left(90, 12, 300);
+    scorpion.create.left(93, 12, 300);
+    scorpion.create.backward(10, 300);
 
     now();
 
     color = scorpion.get_tribble_color();
+    scorpion.create.forward(10, 300);
+
     if(color == GREEN_CHANNEL) {
         scorpion.score(PILE_TWO);
         now();
         return;
     }
 
-    scorpion.create.forward(32, 300);
+    scorpion.create.forward(40, 300);
     scorpion.score(PILE_THREE);
     now();
 

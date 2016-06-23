@@ -36,7 +36,7 @@ static void shake_arm() {
     }}
 
 static void lower_arm() {
-    scorpion.controller.slow_servo(ARM_SERVO, ARM_DOWN, 0.4);
+    scorpion.controller.slow_servo(ARM_SERVO, ARM_DOWN, 0.6);
 }
 
 static void raise_arm() {
@@ -126,8 +126,10 @@ static void grab_tribbles_async() {
     scorpion.create.forward(12, 250);
     thread_wait(tid);
     thread_destroy(tid);
+    scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.4);
+    scorpion.close_claw_slow(0.3);
     scorpion.set_claw_to_position(CLAW_PARTIAL);
-    scorpion.close_claw_slow(0.6);
+    scorpion.close_claw();
 }
 
 void _claw_partial() {
@@ -425,10 +427,15 @@ void score(enum Case tribble_pile) {
         scorpion.raise_arm();
         scorpion.set_claw_to_position(CLAW_PARTIAL);
         score_bin();
+        scorpion.create.right(6, 0, 300);
         break;
     case PILE_TWO:
-        scorpion.create.backward(10, 280);
-        scorpion.lower_arm__open_claw();
+        scorpion.create.forward(5, 300);
+        scorpion.set_arm_to_position(ARM_PARTIAL + 200);
+        scorpion.open_claw();
+        scorpion.create.backward(15, 280);
+        scorpion.lower_arm();
+        scorpion.create.forward(5, 250);
         scorpion.isolate_tribbles();
         scorpion.raise_arm_slow(0.8);
         scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.4);
@@ -442,24 +449,26 @@ void score(enum Case tribble_pile) {
 
         scorpion.set_arm_to_position(ARM_PARTIAL);
         scorpion.drop_basket_slow();
+        scorpion.create.right(6, 0, 300);
         break;
     case PILE_THREE:
         scorpion.lower_arm__open_claw();
         scorpion.set_claw_to_position(CLAW_OPEN - 200);
         scorpion.isolate_tribbles();
         scorpion.raise_arm_slow(0.8);
-        scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.4);
+        scorpion.controller.slow_servo(CLAW_SERVO, CLAW_PARTIAL, 0.5);
 
         scorpion.create.left(85, 0, 300);
         scorpion.create.backward(30, 300);
         scorpion.create.backward(20, 250);
 
-        scorpion.create.forward(8, 300);
-        scorpion.create.left(80, 0, 300);
-        scorpion.create.backward(83, 300);
+        scorpion.create.forward(7, 300);
+        scorpion.create.left(79, 0, 300);
+        scorpion.create.backward(73, 300);
 
         scorpion.set_arm_to_position(ARM_PARTIAL);
         scorpion.drop_basket_slow();
+        scorpion.create.right(6, 0, 300);
         break;
     }
 }
