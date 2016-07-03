@@ -1,6 +1,5 @@
 //
 //  Animal.h
-//  Source written by Justin Yu
 //
 
 #include <kipr/botball.h>
@@ -9,7 +8,7 @@
 typedef struct Animal {
     // inherit
     Controller controller;
-  
+
     void (*init)();
     void (*deinit)();
 } Animal;

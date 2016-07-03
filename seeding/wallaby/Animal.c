@@ -1,16 +1,15 @@
 //
 //  Animal.c
-//  Source written by Justin Yu
 //
 
 #include "Animal.h"
 
 static void init() {
-  
+
 }
 
 static void deinit() {
-    
+
 }
 
 Animal new_animal() {

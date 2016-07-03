@@ -1,6 +1,5 @@
 //
 //  Controller.c
-//  Source written by Justin Yu
 //
 
 #include "Controller.h"
